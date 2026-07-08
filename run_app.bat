@@ -1,0 +1,4 @@
+@echo off
+echo Starting Streamlit Web Dashboard for Keysight E4980A...
+streamlit run app.py
+pause
