@@ -1,0 +1,20 @@
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary measurement data
+*temp.csv
+*temp_sweep_output.csv
+2d_phototransistor_cv_results.csv
+2d_phototransistor_plots.png
+cv_sweep_data.csv
+
+# macOS system files
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+env/
