@@ -115,21 +115,21 @@ st.sidebar.markdown("### 🛠️ Hardware Setup")
 # Manual text input for VISA address
 selected_resource = st.sidebar.text_input(
     "VISA Address", 
-    value="USB0::0x0957::0x0909::MY46500357::0::INSTR",
-    help="Default example USB address. Set to your E4980A address."
+    value="GPIB0::17::INSTR",
+    help="Default example GPIB address. Set to your E4980A address."
 )
 
-# USB Port scanner (only runs when clicked)
-if st.sidebar.button("🔍 Scan for USB Instruments"):
-    with st.spinner("Scanning USB ports..."):
+# GPIB Port scanner (only runs when clicked)
+if st.sidebar.button("🔍 Scan for GPIB Instruments"):
+    with st.spinner("Scanning GPIB channels..."):
         resources = detect_resources()
-        usb_resources = [r for r in resources if "USB" in r]
-        if usb_resources:
-            st.sidebar.success("Detected USB Address(es):")
-            for r in usb_resources:
+        gpib_resources = [r for r in resources if "GPIB" in r]
+        if gpib_resources:
+            st.sidebar.success("Detected GPIB Address(es):")
+            for r in gpib_resources:
                 st.sidebar.code(r)
         else:
-            st.sidebar.warning("No USB instruments found. Ensure your E4980A is powered on.")
+            st.sidebar.warning("No GPIB instruments found. Ensure your E4980A is powered on and connected via GPIB.")
 
 # Sidebar Test Connection
 if st.sidebar.button("🔌 Test Connection"):

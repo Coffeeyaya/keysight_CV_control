@@ -20,14 +20,14 @@ class KeysightE4980A:
         
         if resource_name is None:
             resources = self.rm.list_resources()
-            usb_resources = [r for r in resources if "USB" in r]
-            if not usb_resources:
+            gpib_resources = [r for r in resources if "GPIB" in r]
+            if not gpib_resources:
                 raise RuntimeError(
-                    "No USB instruments found. Please ensure the instrument is "
+                    "No GPIB instruments found. Please ensure the instrument is "
                     "connected and powered on, or specify the VISA address explicitly."
                 )
-            self.resource_name = usb_resources[0]
-            print(f"Auto-detected USB instrument: {self.resource_name}")
+            self.resource_name = gpib_resources[0]
+            print(f"Auto-detected GPIB instrument: {self.resource_name}")
         else:
             self.resource_name = resource_name
             
