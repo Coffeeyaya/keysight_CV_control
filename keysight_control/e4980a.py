@@ -189,15 +189,19 @@ class KeysightE4980A:
             
     def measure_single(self):
         """
-        Triggers a single measurement point using bus triggering and reads the output.
-        Assumes the trigger source is already set to BUS mode.
+        Triggers a single measurement point and reads the output.
+        Assumes the trigger source is set to a remote trigger mode (e.g. HOLD or BUS).
         
         Returns:
             list: [param1, param2, status]
                   e.g. for CPD: [Capacitance (F), Dissipation factor (D), Status]
         """
-        # Trigger measurement and return the values immediately
-        values = self.query_values("*TRG")
+        # Trigger the measurement cycle
+        self.write(":TRIG")
+        # Synchronize: block until the measurement operation is complete
+        self.query("*OPC?")
+        # Fetch the completed measurement values
+        values = self.query_values("FETC?")
         return values
         
     def close(self):

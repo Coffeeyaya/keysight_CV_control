@@ -28,8 +28,8 @@ def run_cv_sweep(instrument, start_voltage, stop_voltage, num_points=21, step_de
     try:
         # Enable DC bias state
         instrument.set_dc_bias_state(True)
-        # Set trigger to BUS mode once before entering the loop to avoid GPIB overhead/timeout
-        instrument.set_trigger_source("BUS")
+        # Set trigger to HOLD mode once before entering the loop to avoid continuous auto-triggering
+        instrument.set_trigger_source("HOLD")
         time.sleep(0.5)
         
         for idx, volt in enumerate(voltages):
