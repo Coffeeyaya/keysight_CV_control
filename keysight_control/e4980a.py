@@ -190,13 +190,12 @@ class KeysightE4980A:
     def measure_single(self):
         """
         Triggers a single measurement point using bus triggering and reads the output.
+        Assumes the trigger source is already set to BUS mode.
         
         Returns:
             list: [param1, param2, status]
                   e.g. for CPD: [Capacitance (F), Dissipation factor (D), Status]
         """
-        # Ensure trigger is set to BUS mode for remote software control
-        self.set_trigger_source("BUS")
         # Trigger measurement and return the values immediately
         values = self.query_values("*TRG")
         return values

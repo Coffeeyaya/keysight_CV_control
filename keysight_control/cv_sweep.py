@@ -28,6 +28,8 @@ def run_cv_sweep(instrument, start_voltage, stop_voltage, num_points=21, step_de
     try:
         # Enable DC bias state
         instrument.set_dc_bias_state(True)
+        # Set trigger to BUS mode once before entering the loop to avoid GPIB overhead/timeout
+        instrument.set_trigger_source("BUS")
         time.sleep(0.5)
         
         for idx, volt in enumerate(voltages):
@@ -64,12 +66,14 @@ def run_cv_sweep(instrument, start_voltage, stop_voltage, num_points=21, step_de
     finally:
         # Ensure DC bias is turned off/reset to 0V when finished or if an error occurs
         if verbose:
-            print("\nSweep complete. Disabling DC bias...")
+            print("\nSweep complete. Disabling DC bias & restoring trigger to INT...")
         try:
             instrument.set_dc_bias_voltage(0.0)
             instrument.set_dc_bias_state(False)
+            # Restore trigger source to internal continuous mode
+            instrument.set_trigger_source("INT")
         except Exception as e:
             if verbose:
-                print(f"Error resetting DC bias: {e}")
+                print(f"Error resetting instrument state: {e}")
                 
     return results
