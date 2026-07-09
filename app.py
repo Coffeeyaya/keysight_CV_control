@@ -159,6 +159,7 @@ step_delay = st.sidebar.slider("Step Settle Delay (s)", min_value=0.01, max_valu
 
 # Sidebar AC Stimulus Parameters
 st.sidebar.markdown("### ⚡ AC Stimulus")
+meas_func = st.sidebar.selectbox("Measurement Function", ["CPD", "CPRP", "CSD"], index=0, help="CPD: Cp-D, CPRP: Cp-Rp, CSD: Cs-D")
 ac_freq = st.sidebar.number_input("AC Frequency (Hz)", min_value=20.0, max_value=2e6, value=1e6, step=100000.0)
 ac_volt = st.sidebar.number_input("AC Amplitude (V)", min_value=0.005, max_value=2.000, value=0.030, step=0.010)
 aperture = st.sidebar.selectbox("Aperture Speed", ["SHOR", "MED", "LONG"], index=1)
@@ -256,6 +257,7 @@ with tab_meas:
                     "--ac-freq", str(ac_freq),
                     "--ac-volt", str(ac_volt),
                     "--aperture", aperture,
+                    "--func", meas_func,
                     "--output", output_file
                 ])
                 if ret == 0 and os.path.exists(output_file):
@@ -287,6 +289,7 @@ with tab_meas:
                     "--ac-freq", str(ac_freq),
                     "--ac-volt", str(ac_volt),
                     "--aperture", aperture,
+                    "--func", meas_func,
                     "--output", output_file
                 ])
                 if ret == 0 and os.path.exists(output_file):

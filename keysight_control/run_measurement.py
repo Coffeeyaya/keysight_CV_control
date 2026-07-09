@@ -23,6 +23,8 @@ def main():
     parser.add_argument("--ac-volt", type=float, default=0.03, help="AC signal amplitude (V)")
     parser.add_argument("--aperture", type=str, default="MED", choices=["SHOR", "MED", "LONG"], 
                         help="Aperture integration speed")
+    parser.add_argument("--func", type=str, default="CPD", choices=["CPD", "CPRP", "CSD"],
+                        help="Measurement parameter function type")
     parser.add_argument("--output", type=str, default="temp_sweep_output.csv", 
                         help="Output path to save temporary sweep data")
     
@@ -74,7 +76,7 @@ def main():
             meter.configure_open_correction(enable=True, execute=False)
             meter.configure_short_correction(enable=True, execute=False)
             
-            meter.set_measurement_function("CPD")
+            meter.set_measurement_function(args.func)
             meter.set_ac_signal(frequency=args.ac_freq, voltage=args.ac_volt)
             meter.set_aperture_time(args.aperture)
             meter.set_auto_range(True)
