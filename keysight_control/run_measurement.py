@@ -13,7 +13,7 @@ def main():
     # CLI Arguments
     parser.add_argument("--visa", type=str, default=None, help="VISA Address of the instrument")
     parser.add_argument("--mode", type=str, required=True, 
-                        choices=["test_conn", "open_cal", "short_cal", "dark_sweep", "light_sweep"],
+                        choices=["test_conn", "open_cal", "short_cal", "dark_sweep", "light_sweep", "reset_inst"],
                         help="Operating mode")
     parser.add_argument("--v-start", type=float, default=-10.0, help="Gate sweep start voltage (V)")
     parser.add_argument("--v-stop", type=float, default=10.0, help="Gate sweep stop voltage (V)")
@@ -40,6 +40,24 @@ def main():
             sys.exit(0)
         except Exception as e:
             print(f"ERROR: Connection failed: {e}", file=sys.stderr)
+            sys.exit(1)
+            
+    # Mode 1.5: Reset Instrument
+    elif args.mode == "reset_inst":
+        print(f"Connecting to reset instrument at VISA address: {args.visa or 'Auto-detect'}")
+        try:
+            meter = KeysightE4980A(resource_name=args.visa)
+            print("Sending reset (*RST)...")
+            meter.reset()
+            print("Restoring trigger source to INT (Continuous)...")
+            meter.set_trigger_source("INT")
+            print("Enabling display screen updates...")
+            meter.enable_display(True)
+            meter.close()
+            print("Reset complete.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"ERROR: Reset failed: {e}", file=sys.stderr)
             sys.exit(1)
             
     # Mode 2 & 3: Calibration

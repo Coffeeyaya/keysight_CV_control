@@ -143,6 +143,18 @@ if st.sidebar.button("🔌 Test Connection"):
         else:
             st.sidebar.error("Connection Failed. Verify connection logs in main panel.")
 
+# Sidebar Reset Instrument Button
+if st.sidebar.button("🔄 Reset LCR Meter"):
+    with st.spinner("Resetting hardware..."):
+        ret, log = run_cli_command(["--visa", selected_resource, "--mode", "reset_inst"])
+        if ret == 0:
+            st.session_state.idn = None
+            st.session_state.open_calibrated = False
+            st.session_state.short_calibrated = False
+            st.sidebar.success("Reset Successful!")
+        else:
+            st.sidebar.error("Reset Failed. Verify connection logs.")
+
 # Sidebar Geometry Settings
 st.sidebar.markdown("### 📐 Transistor Geometry")
 w_um = st.sidebar.number_input("Channel Width W (µm)", min_value=0.1, max_value=10000.0, value=10.0, step=1.0)
