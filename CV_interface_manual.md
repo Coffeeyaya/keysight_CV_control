@@ -6,10 +6,43 @@ This manual explains how to use the Streamlit web dashboard to perform Capacitan
 
 ## 🛠️ Step-by-Step Experimental Procedure
 
-### 1. Device Connections
-For transistor gate-to-channel C-V measurements:
-* **High Terminal (Sourcing/Probing)**: Connect the Gate electrode of your transistor to the **High** terminals (`UNKNOWN` Hcur/Hpot shorted together at the probe tip).
-* **Low Terminal (Return Path)**: Short the Source and Drain electrodes of your transistor together, and connect them to the **Low** terminals (`UNKNOWN` Lcur/Lpot shorted together at the probe tip).
+### 1. Physical Device Connections (Four-Terminal Pair Configuration)
+
+The E4980A uses a **Four-Terminal Pair (4TP)** configuration via the four BNC ports on the front panel: `Hcur`, `Hpot`, `Lpot`, and `Lcur`. This Kelvin connection is designed to eliminate lead resistance, lead inductance, and contact resistance of the cables during high-precision measurements.
+
+#### The 4 Ports Explained:
+* **`Hcur` (High Current)**: Sources the AC test current to the device.
+* **`Hpot` (High Potential)**: Senses the voltage at the high-potential side of the device.
+* **`Lpot` (Low Potential)**: Senses the voltage at the low-potential side of the device.
+* **`Lcur` (Low Current)**: Sinks/returns the AC test current from the device.
+
+#### How to Connect them to your Transistor:
+To measure the gate-to-channel capacitance, you must combine these four ports into a two-probe measurement system (High and Low):
+
+```
+       E4980A Front Panel
+   ┌─────────────────────────┐
+   │  Hcur   Hpot   Lpot   Lcur
+   └───┬──────┬──────┬──────┬──┘
+       │      │      │      │
+       └─┬─T──┘      └─┬─T──┘  <--- Short Hcur/Hpot and Lpot/Lcur (e.g. using BNC T-adapters)
+         │             │
+      [ High ]      [ Low ]    <--- Coaxial BNC cables to Probe Station
+         │             │
+      Probe 1       Probe 2
+      (Gate)     (Source & Drain shorted)
+```
+
+1. **High Probe (Gate Connection)**:
+   * Short **`Hcur` and `Hpot`** together as close to the device as possible. (Commonly done using a BNC T-adapter directly on the front panel, or at the probe station arm).
+   * Route this combined high cable to **Probe 1** and land it on the **Gate electrode** of the transistor.
+2. **Low Probe (Channel Connection)**:
+   * Short **`Lcur` and `Lpot`** together as close to the device as possible (using a BNC T-adapter).
+   * Route this combined low cable to **Probe 2**.
+   * On your device or probe card, **short the Source and Drain contacts together** and connect them to this Low Probe.
+3. **Shielding & Guarding (Crucial for 1 MHz)**:
+   * The outer metal shields of the four BNC cables carry shielding currents to isolate the measurement signals from ambient noise. 
+   * Ensure that the outer shields of all four cables are **connected together** (shorted together) near the probe tips. This forms the return loop for the shielding currents and eliminates parasitic capacitance from cable flexing. (Standard triaxial or Kelvin-coaxial probe arms do this automatically).
 
 ### 2. Launch the Interface
 On the lab computer, run the launcher shortcut:
