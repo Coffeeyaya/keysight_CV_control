@@ -158,6 +158,7 @@ class KeysightE4980A:
         """
         self.write("*CLS")           # Clear error registers & status bytes
         self.write(":TRIG:SOUR INT")  # Switch back to Internal continuous trigger
+        self.write(":DISP:ENAB ON")   # Ensure display updates are enabled and not held
         
     def configure_cable_correction(self, length=1):
         """
