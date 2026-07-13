@@ -170,35 +170,7 @@ aperture = st.sidebar.selectbox("Aperture Speed", ["SHOR", "MED", "LONG"], index
 st.markdown('<div class="main-title">2D Material Phototransistor C-V Sweeper</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Perform High-Frequency Capacitance-Voltage measurements and extract photogenerated sheet carrier concentration profiles.</div>', unsafe_allow_html=True)
 
-# Connection & Calibration Status Card
-col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Instrument Status**")
-    if st.session_state.idn:
-        st.success(f"Connected: {st.session_state.idn.split(',')[1] if ',' in st.session_state.idn else st.session_state.idn}")
-    else:
-        st.warning("Not Connected")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col2:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Open Calibration**")
-    if st.session_state.open_calibrated:
-        st.success("Active (Calibrated)")
-    else:
-        st.info("Stored/Off")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col3:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Short Calibration**")
-    if st.session_state.short_calibrated:
-        st.success("Active (Calibrated)")
-    else:
-        st.info("Stored/Off")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Step-by-Step Execution Tabs
 tab_cal, tab_meas, tab_results = st.tabs(["🔒 Calibration", "🛰️ Measurement", "📊 Results & Export"])
