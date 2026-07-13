@@ -145,27 +145,6 @@ if st.sidebar.button("🔌 Test Connection"):
         else:
             st.sidebar.error("Connection Failed. Verify connection logs in main panel.")
 
-# Sidebar Reset Instrument Button
-if st.sidebar.button("🔄 Reset LCR Meter"):
-    with st.spinner("Resetting hardware..."):
-        ret, log = run_cli_command(["--visa", selected_resource, "--mode", "reset_inst"])
-        if ret == 0:
-            st.session_state.idn = None
-            st.session_state.open_calibrated = False
-            st.session_state.short_calibrated = False
-            st.sidebar.success("Reset Successful!")
-        else:
-            st.sidebar.error("Reset Failed. Verify connection logs.")
-
-# Sidebar Clear Overflow & Resume Button
-if st.sidebar.button("🧹 Clear Overflow & Resume"):
-    with st.spinner("Clearing overflow status..."):
-        ret, log = run_cli_command(["--visa", selected_resource, "--mode", "clear_overflow"])
-        if ret == 0:
-            st.sidebar.success("Overflow cleared & resumed INT!")
-        else:
-            st.sidebar.error("Failed to clear overflow. Verify logs.")
-
 # Sidebar Geometry Settings
 st.sidebar.markdown("### 📐 Transistor Geometry")
 w_um = st.sidebar.number_input("Channel Width W (µm)", min_value=0.1, max_value=10000.0, value=10.0, step=1.0)
@@ -177,7 +156,7 @@ st.sidebar.info(f"Calculated Area: {channel_area_cm2:.4e} cm²")
 st.sidebar.markdown("### 📈 Sweep Settings")
 v_start = st.sidebar.number_input("Start Gate Voltage (V)", value=-10.0, step=1.0)
 v_stop = st.sidebar.number_input("Stop Gate Voltage (V)", value=10.0, step=1.0)
-num_pts = st.sidebar.slider("Number of Points", min_value=5, max_value=201, value=41, step=2)
+num_pts = st.sidebar.number_input("Number of Points", min_value=5, max_value=201, value=41, step=2)
 step_delay = st.sidebar.slider("Step Settle Delay (s)", min_value=0.01, max_value=2.00, value=0.20, step=0.05)
 
 # Sidebar AC Stimulus Parameters
