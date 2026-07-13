@@ -225,9 +225,14 @@ class KeysightE4980A:
         
     def close(self):
         """
-        Closes the active VISA resource connection.
+        Closes the active VISA resource connection and releases control to local mode.
         """
         if self.instrument:
+            try:
+                # Release remote enable (REN) line to return instrument to local mode
+                self.instrument.control_ren(0) 
+            except Exception:
+                pass
             self.instrument.close()
         self.rm.close()
         print("Instrument connection closed.")
