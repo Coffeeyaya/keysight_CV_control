@@ -13,7 +13,7 @@ def main():
     # CLI Arguments
     parser.add_argument("--visa", type=str, default=None, help="VISA Address of the instrument")
     parser.add_argument("--mode", type=str, required=True, 
-                        choices=["test_conn", "open_cal", "short_cal", "dark_sweep", "light_sweep", "reset_inst"],
+                        choices=["test_conn", "open_cal", "short_cal", "dark_sweep", "light_sweep", "reset_inst", "clear_overflow"],
                         help="Operating mode")
     parser.add_argument("--v-start", type=float, default=-10.0, help="Gate sweep start voltage (V)")
     parser.add_argument("--v-stop", type=float, default=10.0, help="Gate sweep stop voltage (V)")
@@ -60,11 +60,24 @@ def main():
             print(f"ERROR: Reset failed: {e}", file=sys.stderr)
             sys.exit(1)
             
-    # Mode 2 & 3: Calibration
+    # Mode 1.6: Clear Overflow & Resume
+    elif args.mode == "clear_overflow":
+        print(f"Connecting to clear overflow at VISA address: {args.visa or 'Auto-detect'}")
+        try:
+            meter = KeysightE4980A(resource_name=args.visa)
+            print("Clearing overflow status (*CLS)...")
+            meter.clear_overflow_and_resume()
+            meter.close()
+            print("Clear overflow and resume INT mode complete.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"ERROR: Clear overflow failed: {e}", file=sys.stderr)
+            sys.exit(1)
+            
     elif args.mode in ["open_cal", "short_cal"]:
         try:
             meter = KeysightE4980A(resource_name=args.visa)
-            meter.reset()
+            # meter.reset()  # Commented out to prevent clearing calibrations in volatile memory
             meter.configure_cable_correction(length=1)
             
             if args.mode == "open_cal":
@@ -87,7 +100,7 @@ def main():
         try:
             print(f"Initializing sweep for mode: {args.mode.upper()}")
             meter = KeysightE4980A(resource_name=args.visa)
-            meter.reset()
+            # meter.reset()  # Commented out to prevent clearing calibrations in volatile memory
             
             # Configure calibrations and settings
             meter.configure_cable_correction(length=1)

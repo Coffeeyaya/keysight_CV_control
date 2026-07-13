@@ -151,6 +151,14 @@ class KeysightE4980A:
             raise ValueError("Source must be one of: 'INT', 'EXT', 'BUS', 'HOLD'")
         self.write(f":TRIG:SOUR {source}")
         
+    def clear_overflow_and_resume(self):
+        """
+        Clears error/overflow registers and restores continuous measurement 
+        without losing calibration data.
+        """
+        self.write("*CLS")           # Clear error registers & status bytes
+        self.write(":TRIG:SOUR INT")  # Switch back to Internal continuous trigger
+        
     def configure_cable_correction(self, length=1):
         """
         Sets the cable length parameter for calibration corrections.
@@ -165,27 +173,37 @@ class KeysightE4980A:
         """
         Toggles or triggers Open circuit calibration correction.
         """
-        state = "ON" if enable else "OFF"
-        self.write(f":CORR:OPEN:STAT {state}")
         if execute:
             print("Executing Open Calibration correction. Please wait...")
-            self.write(":CORR:OPEN:EXEC")
-            # Wait for execution to complete (typically takes several seconds)
-            time.sleep(5)
+            old_timeout = self.instrument.timeout
+            self.instrument.timeout = 60000  # 60s timeout for sweep calibration
+            try:
+                self.write(":CORR:OPEN:EXEC")
+                self.query("*OPC?")
+            finally:
+                self.instrument.timeout = old_timeout
             print("Open correction completed.")
+            
+        state = "ON" if enable else "OFF"
+        self.write(f":CORR:OPEN:STAT {state}")
             
     def configure_short_correction(self, enable=True, execute=False):
         """
         Toggles or triggers Short circuit calibration correction.
         """
-        state = "ON" if enable else "OFF"
-        self.write(f":CORR:SHOR:STAT {state}")
         if execute:
             print("Executing Short Calibration correction. Please wait...")
-            self.write(":CORR:SHOR:EXEC")
-            # Wait for execution to complete (typically takes several seconds)
-            time.sleep(5)
+            old_timeout = self.instrument.timeout
+            self.instrument.timeout = 60000  # 60s timeout for sweep calibration
+            try:
+                self.write(":CORR:SHOR:EXEC")
+                self.query("*OPC?")
+            finally:
+                self.instrument.timeout = old_timeout
             print("Short correction completed.")
+            
+        state = "ON" if enable else "OFF"
+        self.write(f":CORR:SHOR:STAT {state}")
             
     def measure_single(self):
         """

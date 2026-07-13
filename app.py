@@ -52,6 +52,8 @@ if "short_calibrated" not in st.session_state:
     st.session_state.short_calibrated = False
 if "idn" not in st.session_state:
     st.session_state.idn = None
+if "calculated" not in st.session_state:
+    st.session_state.calculated = False
 
 # Resource detection helper (delayed import to prevent page-load errors)
 def detect_resources():
@@ -154,6 +156,15 @@ if st.sidebar.button("🔄 Reset LCR Meter"):
             st.sidebar.success("Reset Successful!")
         else:
             st.sidebar.error("Reset Failed. Verify connection logs.")
+
+# Sidebar Clear Overflow & Resume Button
+if st.sidebar.button("🧹 Clear Overflow & Resume"):
+    with st.spinner("Clearing overflow status..."):
+        ret, log = run_cli_command(["--visa", selected_resource, "--mode", "clear_overflow"])
+        if ret == 0:
+            st.sidebar.success("Overflow cleared & resumed INT!")
+        else:
+            st.sidebar.error("Failed to clear overflow. Verify logs.")
 
 # Sidebar Geometry Settings
 st.sidebar.markdown("### 📐 Transistor Geometry")
@@ -275,6 +286,7 @@ with tab_meas:
                 if ret == 0 and os.path.exists(output_file):
                     df_temp = pd.read_csv(output_file)
                     st.session_state.dark_results = df_temp.to_dict('records')
+                    st.session_state.calculated = False
                     st.success("Dark measurement complete!")
                 else:
                     st.error("Dark sweep failed. Check connection/logs.")
@@ -307,6 +319,7 @@ with tab_meas:
                 if ret == 0 and os.path.exists(output_file):
                     df_temp = pd.read_csv(output_file)
                     st.session_state.light_results = df_temp.to_dict('records')
+                    st.session_state.calculated = False
                     st.success("Light measurement complete!")
                 else:
                     st.error("Light sweep failed. Check connection/logs.")
@@ -321,39 +334,65 @@ with tab_meas:
 with tab_results:
     st.subheader("Data Analysis & Plots")
     
-    if st.session_state.dark_results and st.session_state.light_results:
-        # Perform calculations
-        v_dark, c_dark, n_dark = calculate_2d_carrier_concentration(st.session_state.dark_results, channel_area_cm2)
-        v_light, c_light, n_light = calculate_2d_carrier_concentration(st.session_state.light_results, channel_area_cm2)
+    has_dark = st.session_state.dark_results is not None and len(st.session_state.dark_results) > 0
+    has_light = st.session_state.light_results is not None and len(st.session_state.light_results) > 0
+    
+    if has_dark or has_light:
+        v_dark, c_dark, n_dark = None, None, None
+        v_light, c_light, n_light = None, None, None
         
-        n_photo = n_light - n_dark
+        if has_dark:
+            v_dark, c_dark, n_dark = calculate_2d_carrier_concentration(st.session_state.dark_results, channel_area_cm2)
+        if has_light:
+            v_light, c_light, n_light = calculate_2d_carrier_concentration(st.session_state.light_results, channel_area_cm2)
+            
+        n_photo = None
+        if has_dark and has_light:
+            col_calc1, col_calc2 = st.columns([3, 1])
+            with col_calc1:
+                st.info("💡 Both Dark and Light C-V sweeps are measured. Press the button to calculate the net photocarrier density.")
+            with col_calc2:
+                if st.button("🧮 Calculate Photocarriers", type="primary"):
+                    st.session_state.calculated = True
+            
+            if st.session_state.calculated:
+                n_photo = n_light - n_dark
+                st.success("Calculated net photocarrier density (N_photo = N_light - N_dark)!")
+                
+        df_cols = {}
+        if has_dark:
+            df_cols["Voltage (V)"] = v_dark
+            df_cols["C_dark (pF)"] = c_dark * 1e12
+            df_cols["N_dark (cm^-2)"] = n_dark
+        if has_light:
+            if "Voltage (V)" not in df_cols:
+                df_cols["Voltage (V)"] = v_light
+            df_cols["C_light (pF)"] = c_light * 1e12
+            df_cols["N_light (cm^-2)"] = n_light
+        if n_photo is not None:
+            df_cols["N_photo (cm^-2)"] = n_photo
+            
+        df = pd.DataFrame(df_cols)
         
-        # Build pandas DataFrame for visualization and download
-        df = pd.DataFrame({
-            "Voltage (V)": v_dark,
-            "C_dark (pF)": c_dark * 1e12,
-            "C_light (pF)": c_light * 1e12,
-            "N_dark (cm^-2)": n_dark,
-            "N_light (cm^-2)": n_light,
-            "N_photo (cm^-2)": n_photo
-        })
-        
-        # Ploting Panel
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
         
-        # Subplot 1: C-V curves
-        ax1.plot(v_dark, df["C_dark (pF)"], 'ko-', label='Dark', linewidth=2, markersize=4)
-        ax1.plot(v_light, df["C_light (pF)"], 'ro-', label='Illuminated', linewidth=2, markersize=4)
+        if has_dark:
+            ax1.plot(v_dark, df["C_dark (pF)"], 'ko-', label='Dark', linewidth=2, markersize=4)
+        if has_light:
+            ax1.plot(v_light, df["C_light (pF)"], 'ro-', label='Illuminated', linewidth=2, markersize=4)
         ax1.set_xlabel('Gate Bias Voltage $V_g$ (V)', fontsize=11)
         ax1.set_ylabel('Gate Capacitance $C_p$ (pF)', fontsize=11)
         ax1.set_title('Capacitance-Voltage (C-V) Curves', fontsize=12, fontweight='bold')
         ax1.grid(True, linestyle='--', alpha=0.6)
         ax1.legend(fontsize=10)
         
-        # Subplot 2: Carrier concentration
-        ax2.plot(v_dark, df["N_dark (cm^-2)"], 'k--', label='$N_{dark}$ (Dark Carriers)', linewidth=1.8)
-        ax2.plot(v_light, df["N_light (cm^-2)"], 'r--', label='$N_{light}$ (Illuminated Carriers)', linewidth=1.8)
-        ax2.plot(v_dark, df["N_photo (cm^-2)"], 'b-', label='$N_{photo}$ (Net Photocarriers)', linewidth=2.2)
+        if has_dark:
+            ax2.plot(v_dark, df["N_dark (cm^-2)"], 'k--', label='$N_{dark}$ (Dark Carriers)', linewidth=1.8)
+        if has_light:
+            ax2.plot(v_light, df["N_light (cm^-2)"], 'r--', label='$N_{light}$ (Illuminated Carriers)', linewidth=1.8)
+        if n_photo is not None:
+            v_ref = v_dark if v_dark is not None else v_light
+            ax2.plot(v_ref, df["N_photo (cm^-2)"], 'b-', label='$N_{photo}$ (Net Photocarriers)', linewidth=2.2)
         ax2.set_xlabel('Gate Bias Voltage $V_g$ (V)', fontsize=11)
         ax2.set_ylabel('2D Sheet Carrier Density $N_{2D}$ ($cm^{-2}$)', fontsize=11)
         ax2.set_title('Carrier Concentration Profile', fontsize=12, fontweight='bold')
@@ -363,9 +402,7 @@ with tab_results:
         plt.tight_layout()
         st.pyplot(fig)
         
-        # CSV Export Options
         csv_data = df.to_csv(index=False).encode('utf-8')
-        
         col_down1, col_down2 = st.columns(2)
         with col_down1:
             st.download_button(
@@ -386,16 +423,20 @@ with tab_results:
                     mime="image/png"
                 )
         
-        # Show interactive data preview
         st.markdown("### 📋 Data Table Preview")
-        st.dataframe(df.style.format({
-            "Voltage (V)": "{:.2f}",
-            "C_dark (pF)": "{:.4f}",
-            "C_light (pF)": "{:.4f}",
-            "N_dark (cm^-2)": "{:.4e}",
-            "N_light (cm^-2)": "{:.4e}",
-            "N_photo (cm^-2)": "{:.4e}"
-        }), height=300)
+        format_dict = {"Voltage (V)": "{:.2f}"}
+        if "C_dark (pF)" in df.columns:
+            format_dict["C_dark (pF)"] = "{:.4f}"
+        if "C_light (pF)" in df.columns:
+            format_dict["C_light (pF)"] = "{:.4f}"
+        if "N_dark (cm^-2)" in df.columns:
+            format_dict["N_dark (cm^-2)"] = "{:.4e}"
+        if "N_light (cm^-2)" in df.columns:
+            format_dict["N_light (cm^-2)"] = "{:.4e}"
+        if "N_photo (cm^-2)" in df.columns:
+            format_dict["N_photo (cm^-2)"] = "{:.4e}"
+            
+        st.dataframe(df.style.format(format_dict), height=300)
         
     else:
-        st.info("⚠️ Please record both Dark and Illuminated C-V sweeps in the 'Measurement' tab to view results and calculate carrier concentration profiles.")
+        st.info("⚠️ Please record either Dark or Illuminated C-V sweeps in the 'Measurement' tab to view results and calculate carrier concentration profiles.")
