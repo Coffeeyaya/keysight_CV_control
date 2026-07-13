@@ -157,7 +157,7 @@ st.sidebar.markdown("### 📈 Sweep Settings")
 v_start = st.sidebar.number_input("Start Gate Voltage (V)", value=-10.0, step=1.0)
 v_stop = st.sidebar.number_input("Stop Gate Voltage (V)", value=10.0, step=1.0)
 num_pts = st.sidebar.number_input("Number of Points", min_value=5, max_value=201, value=41, step=2)
-step_delay = st.sidebar.slider("Step Settle Delay (s)", min_value=0.01, max_value=2.00, value=0.20, step=0.05)
+step_delay = 0.20  # Constant step settle delay (s)
 
 # Sidebar AC Stimulus Parameters
 st.sidebar.markdown("### ⚡ AC Stimulus")
